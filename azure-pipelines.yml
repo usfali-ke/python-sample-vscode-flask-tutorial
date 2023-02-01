@@ -37,7 +37,7 @@ steps:
 
 - script: |
     docker pull nginx:latest
-    docker run --rm -v /root/.cache/:/root/.cache/ -v /var/run/docker.sock:/var/run/docker.sock -v $(pwd):/src aquasec/trivy image -f json -o /src/trivy-output.json nginx:lastest
+    docker run --rm -v /root/.cache/:/root/.cache/ -v /var/run/docker.sock:/var/run/docker.sock -v $(pwd):/src aquasec/trivy image -f json -o /src/trivy-output.json nginx:latest
     docker rmi -f nginx:latest
   displayName: "trivy image scan"
   continueOnError: true
