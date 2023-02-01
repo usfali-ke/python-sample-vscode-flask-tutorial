@@ -30,14 +30,11 @@ steps:
     pytest
   displayName: 'pytest'
 
-jobs:
-- job: Scan_local_project
-  steps:
-  - task: trivy@1
-    inputs:
-      path: .
-- job: Scan_ubuntu_image
-  steps:
-  - task: trivy@1
-    inputs:
-      image: ubuntu
+- task: trivy@1
+  displayName: trivy Filesystem scan
+  inputs:
+    path: .
+- task: trivy@1
+  displayName: trivy Image scan
+  inputs:
+    image: ubuntu
