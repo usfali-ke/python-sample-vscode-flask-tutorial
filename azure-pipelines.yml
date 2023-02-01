@@ -39,7 +39,7 @@ steps:
     docker pull nginx:latest
     docker run --rm -v /root/.cache/:/root/.cache/ -v /var/run/docker.sock:/var/run/docker.sock -v $(pwd):/src aquasec/trivy image -f json -o /src/trivy-output.json nginx:lastest
     docker rmi -f nginx:latest
-  displayName: "Image scan by trivy"
+  displayName: "trivy image scan"
   continueOnError: true
 
 
