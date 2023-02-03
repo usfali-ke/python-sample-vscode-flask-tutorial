@@ -31,6 +31,7 @@ stages:
     - script: |
         sudo apt-get install rpm
         wget https://github.com/aquasecurity/trivy/releases/download/v$(trivyVersion)/trivy_$(trivyVersion)_Linux-64bit.deb
+        wget https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/junit.tpl
         sudo dpkg -i trivy_$(trivyVersion)_Linux-64bit.deb
         trivy -v
       displayName: 'Download and install Trivy'
@@ -39,8 +40,8 @@ stages:
       displayName: "Run trivy scan"
       inputs:
         script: |
-            trivy image --severity LOW,MEDIUM --format template --template "@templates/junit.tpl" -o junit-report-low-med.xml $(imageName):$(tag)         
-            trivy image --severity HIGH,CRITICAL --format template --template "@templates/junit.tpl" -o junit-report-high-crit.xml $(imageName):$(tag)         
+            trivy image --severity LOW,MEDIUM --format template --template "junit.tpl" -o junit-report-low-med.xml $(imageName):$(tag)         
+            trivy image --severity HIGH,CRITICAL --format template --template "junit.tpl" -o junit-report-high-crit.xml $(imageName):$(tag)         
 
     - task: PublishTestResults@2
       inputs:
