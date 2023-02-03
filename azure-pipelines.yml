@@ -1,40 +1,68 @@
 trigger:
-- main
+- master
 
-pool:
-  vmImage: ubuntu-latest
-strategy:
-  matrix:
-    Python27:
-      python.version: '2.7'
-    Python35:
-      python.version: '3.5'
-    Python36:
-      python.version: '3.6'
-    Python37:
-      python.version: '3.7'
+resources:
+- repo: self
 
-steps:
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '$(python.version)'
-  displayName: 'Use Python $(python.version)'
+variables:
+  trivyVersion: 0.37.1
+  tag: '$(Build.BuildNumber)'
+  imageName: 'alienke/py-flask-tut'
 
-- script: |
-    python -m pip install --upgrade pip
-    pip install -r requirements.txt
-  displayName: 'Install dependencies'
+stages:
+- stage: Build
+  displayName: Build, Scan and Push image
+  jobs:  
+  - job: Build
+    displayName: Build, Scan and Push
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: Docker@2
+      displayName: Build an image
+      inputs:
+        containerRegistry: 'alienke_dockerHub'
+        repository: '$(imageName)'
+        command: 'build'
+        Dockerfile: '**/Dockerfile'
+        buildContext: '$(Build.SourcesDirectory)/src/'
+        tags: '$(tag)'
 
-- script: |
-    pip install pytest pytest-azurepipelines
-    pytest
-  displayName: 'pytest'
+    - script: |
+        sudo apt-get install rpm
+        wget https://github.com/aquasecurity/trivy/releases/download/v$(trivyVersion)/trivy_$(trivyVersion)_Linux-64bit.deb
+        sudo dpkg -i trivy_$(trivyVersion)_Linux-64bit.deb
+        trivy -v
+      displayName: 'Download and install Trivy'
 
-- task: trivy@1
-  displayName: trivy Filesystem scan
-  inputs:
-    path: .
-- task: trivy@1
-  displayName: trivy Image scan
-  inputs:
-    image: ubuntu
+    - task: CmdLine@2
+      displayName: "Run trivy scan"
+      inputs:
+        script: |
+            trivy image --severity LOW,MEDIUM --format template --template "@templates/junit.tpl" -o junit-report-low-med.xml $(imageName):$(tag)         
+            trivy image --severity HIGH,CRITICAL --format template --template "@templates/junit.tpl" -o junit-report-high-crit.xml $(imageName):$(tag)         
+
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: '**/junit-report-low-med.xml'
+        mergeTestResults: true
+        failTaskOnFailedTests: false
+        testRunTitle: 'Trivy - Low and Medium Vulnerabilities'
+      condition: 'always()'   
+
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: '**/junit-report-high-crit.xml'
+        mergeTestResults: true
+        failTaskOnFailedTests: true
+        testRunTitle: 'Trivy - High and Critical Vulnerabilities'
+      condition: 'always()'             
+
+    - task: Docker@2
+      inputs:
+        containerRegistry: 'alienke_dockerHub'
+        repository: '$(imageName)'
+        command: 'push'
+        tags: '$(tag)'
