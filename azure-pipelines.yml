@@ -29,7 +29,7 @@ stages:
         tags: '$(tag)'
 
     - script: |
-        DOCKLE_HOST: "unix:///var/run/docker.sock"
+        export DOCKLE_HOST: "unix:///var/run/docker.sock"
       displayName: Set Up Docker env
     
     - task: trivy@1
