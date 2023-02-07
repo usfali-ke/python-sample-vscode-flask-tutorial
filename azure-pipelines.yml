@@ -42,6 +42,15 @@ stages:
       displayName: trivy Image scan
       inputs:
         image: '$(imageName):$(tag)'
+      continueOnError: true
+    
+    - task: CmdLine@2
+      displayName: Scan img
+      inputs:
+        script: |
+         docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ aquasec/trivy --exit-code 0 --severity MEDIUM,HIGH --ignore-unfixed '$(imageName):$(tag)'
+         
+         docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ aquasec/trivy --exit-code 1 --severity CRITICAL --ignore-unfixed '$(imageName):$(tag)'
     
     - task: Docker@2
       displayName: Push image to reg
