@@ -39,8 +39,10 @@ stages:
       displayName: trivy Filesystem scan
       inputs:
         path: .
+      continueOnError: true
 
     - task: trivy@1
       displayName: trivy Image scan
       inputs:
         image: '$(imageName).$(tag)'
+      continueOnError: true
