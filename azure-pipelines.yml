@@ -26,14 +26,7 @@ stages:
         command: 'build'
         Dockerfile: '**/Dockerfile'
         buildContext: '$(Build.SourcesDirectory)/'
-        tags: '$(tag)'
-
-    - task: Docker@2
-      inputs:
-        containerRegistry: 'alienke_dockerHub'
-        repository: '$(imageName)'
-        command: 'push'
-        tags: '$(tag)'          
+        tags: '$(tag)'         
 
     - task: trivy@1
       displayName: trivy Filesystem scan
@@ -44,5 +37,13 @@ stages:
     - task: trivy@1
       displayName: trivy Image scan
       inputs:
-        image: '$(imageName).$(tag)'
-      continueOnError: true
+        image: '$(imageName):$(tag)'
+    
+    - task: Docker@2
+      displayName: Push image to reg
+      inputs:
+        containerRegistry: 'alienke_dockerHub'
+        repository: '$(imageName)'
+        command: 'push'
+        tags: '$(tag)' 
+      
