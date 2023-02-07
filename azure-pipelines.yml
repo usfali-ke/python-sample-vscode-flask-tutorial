@@ -26,8 +26,12 @@ stages:
         command: 'build'
         Dockerfile: '**/Dockerfile'
         buildContext: '$(Build.SourcesDirectory)/'
-        tags: '$(tag)'         
+        tags: '$(tag)'
 
+    - script: |
+        DOCKLE_HOST: "unix:///var/run/docker.sock"
+      displayName: Set Up Docker env
+    
     - task: trivy@1
       displayName: trivy Filesystem scan
       inputs:
